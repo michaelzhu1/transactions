@@ -80,7 +80,7 @@ const batchUpsert = function(model, generateQuery, objectArray) {
  * Returns aggregate query over valid transactions for each customer
  * @returns {Promise}
  */
-const aggregateValidTransactions = () => {
+const aggregateValidDeposits = () => {
     return TransactionModel.aggregate(
     [{
         $match: {
@@ -107,17 +107,17 @@ const aggregateValidTransactions = () => {
  * Output deposits data to stdout
  * @param {Object} deposits
  */
-const printDeposits = function(deposits) {
+const showDeposits = function(deposits) {
     const referencedTransations = deposits.referencedTransations;
     const noReferenceTransations = deposits.noReferenceTransations;
 
     for (let address in CUSTOMER_ADDRESS) {
         const name = CUSTOMER_ADDRESS[address];
-        const customerTransaction = referencedTransations.find(transaction => {
+        const knownCustomerTransaction = referencedTransations.find(transaction => {
             return transaction._id === address;
         });
-        if (customerTransaction) {
-            console.log(`Deposited for ${name}: count=${customerTransaction.count} sum=${parseFloat(customerTransaction.sum).toFixed(8)}`);
+        if (knownCustomerTransaction) {
+            console.log(`Deposited for ${name}: count=${knownCustomerTransaction.count} sum=${parseFloat(knownCustomerTransaction.sum).toFixed(8)}`);
         }
     }
 
@@ -131,7 +131,7 @@ const printDeposits = function(deposits) {
  * @param {Array} totalTransactionPerCustomer
  * @returns {Object}
  */
-const processTransactions = function(totalTransactionPerCustomer) {
+const processDeposits = function(totalTransactionPerCustomer) {
     const noReferenceTransations = totalTransactionPerCustomer.reduce((acc, curr) => {
         if (!CUSTOMER_ADDRESS[curr]) {
             acc.sum += curr.sum;
@@ -184,10 +184,10 @@ async function inputDB(dbURL, transactions) {
             }
         }
         await batchUpsert(TransactionModel, generateQuery, transactions);
-        const totalTransactionPerCustomer = await aggregateValidTransactions();
+        const totalDepositsPerCustomer = await aggregateValidDeposits();
         db.close();
 
-        return processTransactions(totalTransactionPerCustomer);
+        return processDeposits(totalDepositsPerCustomer);
     } catch(error) {
         console.error(error);
     }
@@ -199,5 +199,5 @@ const transaction_2 = parseJSON("./transactions-2.json");
 const transactions = transaction_1.transactions.concat(transaction_2.transactions);
 
 inputDB(mongodbURL, transactions).then(depositsData => {
-    printDeposits(depositsData);
+    showDeposits(depositsData);
 });
