@@ -1,0 +1,33 @@
+version: '2.1'
+services:
+    mongodb:
+        image: mongo:latest
+        container_name: "mongodbdatabase"
+        environment:
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/dev/null
+          - SE_OPTS=-log /tmp/log.txt
+        volumes:
+          - ./data/db:/data/db
+        ports:
+            - 27017:27017
+        command: mongod --smallfiles --quiet
+        healthcheck:
+            test: mongo localhost:27017/transactions --quiet
+            interval: 5s
+            timeout: 5s
+            retries: 5
+        logging:
+            driver: "none"
+
+    transactions:
+        build: .
+        container_name: "transactions"
+        image: debian/latest
+        links:
+            - mongodb
+        depends_on:
+            "mongodb":
+                condition: service_healthy
+        environment:
+            MONGODB_CONTAINER: mongodbdatabase

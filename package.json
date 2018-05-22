@@ -1,0 +1,15 @@
+{
+  "name": "transactions",
+  "version": "1.0.0",
+  "description": "Kraken coding challenge.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Michael Zhu",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.10",
+    "mongoose": "^5.0.17"
+  }
+}
